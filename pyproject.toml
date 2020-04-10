@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "trello-tasks"
+version = "0.1.0"
+description = ""
+authors = ["Alejandro Piad <alepiad@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+py-trello = "^0.16.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.1"
+pytest-cov = "^2.8.1"
+coverage = "^5.0.4"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry]
+packages = [{
+    include="trellotasks"
+}]
