@@ -12,5 +12,9 @@ def main(config:str="config.yml"):
     manager.run()
 
 
-if __name__ == "__main__":
+def run():
     typer.run(main)
+
+
+if __name__ == "__main__":
+    run()

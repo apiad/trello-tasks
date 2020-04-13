@@ -1,14 +1,15 @@
 auth:
-    api_key: API_KEY
-    api_secret: API_SECRET
+  api_key: API_KEY
+  api_secret: API_SECRET
 
 boards:
-    - id: GpNKiGw8
-        queue_list: "Queue"
-        ongoing_list: "Ongoing"
-        done_list: "Done"
-        command: "sleep '{msg}'"
-        poll_time: 3
-        resources:
-        Resource A: 1
-        Resource B: 2
+  - id: GpNKiGw8
+    queue_list: "Queue"
+    ongoing_list: "Ongoing"
+    done_list: "Done"
+    command: "sleep '{msg}'; echo 'I wasted {msg} seconds of CPU' > {uid}.log"
+    poll_time: 3
+    limit: 2
+    resources:
+      Resource A: 1
+      Resource B: 2

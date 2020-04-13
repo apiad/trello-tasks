@@ -75,6 +75,10 @@ class TaskManager:
         resources = board_config.get("resources", {})
         uses_resources = []
         labels = card.labels or []
+        limit = board_config.get('limit', 0)
+
+        if limit and ongoing_list.cardsCnt() >= limit:
+            return
 
         for label in labels:
             if label.name in resources:
