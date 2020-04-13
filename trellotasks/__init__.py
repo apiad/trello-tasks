@@ -3,6 +3,8 @@ import asyncio
 import datetime
 import psutil
 import collections
+import uuid
+from pathlib import Path
 
 from trello import TrelloClient, Card, List, Label
 
@@ -84,36 +86,38 @@ class TaskManager:
         for label in uses_resources:
             used_resources[label] += 1
 
-        cmd = shlex.split(board_config["command"].format(msg=card.description))
+        uid = str(uuid.uuid4())
+        cmd = board_config["command"].format(msg=card.description, uid=uid)
 
         print(f"Scheduling card {card.name}")
-        process = subprocess.Popen(cmd, close_fds=True)
+        process = subprocess.Popen(cmd, shell=True)
 
         card.change_list(ongoing_list.id)
         card.comment(f"⏲ Started: {datetime.datetime.now()}")
         card.comment(f"💻 PID: {process.pid}")
+        card.comment(f"🔑 UID: {uid}")
 
     def _check_card(self, card: Card, done_list: List, used_resources: dict):
         print(f"Checking card {card.name}")
         pid = None
+        uid = None
 
         for comment in card.fetch_comments():
             comment_text = comment["data"]["text"]
             if "PID:" in comment_text:
                 pid = int(comment_text.split("PID:")[1].strip())
+            if "UID:" in comment_text:
+                uid = comment_text.split("UID:")[1].strip()
 
         if pid is None:
             raise ValueError(f"PID not found in card {card.name}")
 
+        if uid is None:
+            raise ValueError(f"UID not found in card {card.name}")
+
         if not psutil.pid_exists(pid):
-            card.change_list(done_list.id)
             card.comment(f"❌ Error: Could not find the process")
-
-            for label in card.labels:
-                if label.name in used_resources:
-                    used_resources[label.name] -= 1
-
-            return
+            return self._finish_card(card, done_list, used_resources, uid)
 
         process = psutil.Process(int(pid))
 
@@ -122,9 +126,18 @@ class TaskManager:
 
         print(f"Finished card {card.name}")
 
-        card.change_list(done_list.id)
         card.comment(f"✔️ Finished: {datetime.datetime.now()}")
+        self._finish_card(card, done_list, used_resources, uid)
+
+    def _finish_card(self, card: Card, done_list:List, used_resources:dict, uid: str):
+        card.change_list(done_list.id)
 
         for label in card.labels:
             if label.name in used_resources:
                 used_resources[label.name] -= 1
+
+        log_file = Path(f"{uid}.log")
+
+        if log_file.exists():
+            with open(log_file) as fp:
+                card.attach(name=f"{uid}.log", file=fp)
