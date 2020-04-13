@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "trello-tasks"
-version = "0.1.0"
-description = ""
+name = "trellotasks"
+version = "0.1.1"
+description = "A simple task scheduler built with Python and managed through Trello."
 authors = ["Alejandro Piad <alepiad@gmail.com>"]
 license = "MIT"
 

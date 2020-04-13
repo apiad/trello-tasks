@@ -74,8 +74,9 @@ class TaskManager:
     ):
         resources = board_config.get("resources", {})
         uses_resources = []
+        labels = card.labels or []
 
-        for label in card.labels:
+        for label in labels:
             if label.name in resources:
                 uses_resources.append(label.name)
 
@@ -90,7 +91,7 @@ class TaskManager:
         cmd = board_config["command"].format(msg=card.description, uid=uid)
 
         print(f"Scheduling card {card.name}")
-        process = subprocess.Popen(cmd, shell=True)
+        process = subprocess.Popen(cmd, shell=True, start_new_session=True)
 
         card.change_list(ongoing_list.id)
         card.comment(f"⏲ Started: {datetime.datetime.now()}")
@@ -116,7 +117,7 @@ class TaskManager:
             raise ValueError(f"UID not found in card {card.name}")
 
         if not psutil.pid_exists(pid):
-            card.comment(f"❌ Error: Could not find the process")
+            card.comment(f"⚠️ Warning: Could not find the process, assuming it finised.")
             return self._finish_card(card, done_list, used_resources, uid)
 
         process = psutil.Process(int(pid))
@@ -124,15 +125,16 @@ class TaskManager:
         if process.status() in [psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING]:
             return
 
-        print(f"Finished card {card.name}")
-
-        card.comment(f"✔️ Finished: {datetime.datetime.now()}")
         self._finish_card(card, done_list, used_resources, uid)
 
     def _finish_card(self, card: Card, done_list:List, used_resources:dict, uid: str):
-        card.change_list(done_list.id)
+        print(f"Finished card {card.name}")
 
-        for label in card.labels:
+        card.comment(f"✔️ Finished: {datetime.datetime.now()}")
+        card.change_list(done_list.id)
+        labels = card.labels or []
+
+        for label in labels:
             if label.name in used_resources:
                 used_resources[label.name] -= 1
 
